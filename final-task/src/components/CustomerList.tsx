@@ -20,7 +20,7 @@ const CustomerList: React.FC = () => {
       setCustomers(response.data);
     } catch (error) {
       console.error('Error loading customers:', error);
-      alert('Error loading customers');
+      // En un entorno real, mostraríamos un mensaje de error al usuario
     } finally {
       setLoading(false);
     }
@@ -80,11 +80,14 @@ const CustomerList: React.FC = () => {
       <div className="search-bar">
         <input
           type="text"
-          placeholder="Search customers..."
+          placeholder="Search customers by name, email, or city..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="search-input"
         />
+        <div className="search-info">
+          Showing {sortedCustomers.length} of {customers.length} customers
+        </div>
       </div>
 
       {/* Tabla de clientes */}
