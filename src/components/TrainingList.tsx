@@ -8,7 +8,7 @@ import './TrainingList.css';
 
 const TrainingList: React.FC = () => {
   const [trainings, setTrainings] = useState<Training[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<SortableTrainingField>('date');
@@ -80,17 +80,17 @@ const TrainingList: React.FC = () => {
   };
 
   const handleDeleteTraining = async (training: Training) => {
-    let trainingId = training.id;
+    let trainingId: number | undefined = training.id;
     
-    // Si no hay ID directo, intentar extraerlo de _links.self.href
     if (!trainingId && training._links?.self?.href) {
-      trainingId = extractIdFromUrl(training._links.self.href);
+        const extractedId = extractIdFromUrl(training._links.self.href);
+        trainingId = extractedId ?? undefined; // Convierte null a undefined
     }
     
     if (!trainingId) {
-      console.error('Training ID is missing and cannot be extracted from URL');
-      alert('Cannot delete training: ID is missing');
-      return;
+        console.error('Training ID is missing and cannot be extracted from URL');
+        alert('Cannot delete training: ID is missing');
+        return;
     }
     
     const confirmed = window.confirm(

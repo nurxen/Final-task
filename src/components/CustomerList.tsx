@@ -26,16 +26,18 @@ const CustomerList: React.FC = () => {
       const response = await customerService.getAll();
       const customersData = response.data._embedded.customers;
       
-      // Asegurarnos de que cada cliente tenga un ID
       const customersWithIds = customersData.map(customer => {
-        let customerId = customer.id;
-        if (!customerId && customer._links?.self?.href) {
-          customerId = extractIdFromUrl(customer._links.self.href);
-        }
-        return {
+      let customerId: number | undefined = customer.id;
+      
+      if (!customerId && customer._links?.self?.href) {
+          const extractedId = extractIdFromUrl(customer._links.self.href);
+          customerId = extractedId ?? undefined; // Convierte null a undefined
+      }
+      
+      return {
           ...customer,
-          id: customerId
-        };
+          id: customerId // Ya es number | undefined
+      };
       });
       
       setCustomers(customersWithIds);
@@ -58,17 +60,17 @@ const CustomerList: React.FC = () => {
   };
 
   const handleDeleteCustomer = async (customer: Customer) => {
-    let customerId = customer.id;
+    let customerId: number | undefined = customer.id; // Explícitamente define el tipo
     
-    // Si no hay ID directo, intentar extraerlo de _links.self.href
     if (!customerId && customer._links?.self?.href) {
-      customerId = extractIdFromUrl(customer._links.self.href);
+        const extractedId = extractIdFromUrl(customer._links.self.href);
+        customerId = extractedId ?? undefined; // Convierte null a undefined
     }
     
     if (!customerId) {
-      console.error('Customer ID is missing and cannot be extracted from URL');
-      alert('Cannot delete customer: ID is missing');
-      return;
+        console.error('Customer ID is missing and cannot be extracted from URL');
+        alert('Cannot delete customer: ID is missing');
+        return;
     }
     
     const confirmed = window.confirm(

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, momentLocalizer, type Event } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import type { Training, Customer } from '../types';
+import type { Training } from '../types';
 import { trainingService, customerService } from '../services/api';
 import { extractIdFromUrl } from '../types';
 import './CalendarPage.css';
@@ -24,13 +24,12 @@ const CalendarPage: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const [trainingsResponse, customersResponse] = await Promise.all([
+      const [trainingsResponse] = await Promise.all([
         trainingService.getAll(),
         customerService.getAll()
       ]);
 
       const trainingsData = trainingsResponse.data._embedded.trainings;
-      const customersData = customersResponse.data._embedded.customers;
 
       // Enriquecer entrenamientos con nombres de clientes
       const enrichedTrainings = await Promise.all(
@@ -131,7 +130,7 @@ const CalendarPage: React.FC = () => {
           views={['month', 'week', 'day', 'agenda']}
           defaultView="month"
           popup
-          eventPropGetter={(event) => ({
+          eventPropGetter={() => ({
             style: {
               backgroundColor: '#3174ad',
               borderRadius: '5px',
