@@ -24,7 +24,7 @@ export interface Customer {
   email: string;
   phone: string;
   _links?: CustomerLinks;
-  trainings?: Training[]; // opcional si quieres enlazar entrenamientos al cliente
+  trainings?: Training[];
 }
 
 export interface Training {
@@ -32,7 +32,7 @@ export interface Training {
   date: string;
   duration: number;
   activity: string;
-  customer?: Customer | string; // puede ser solo el href o un objeto completo
+  customer?: Customer | string;
   customerName?: string;
   _links?: TrainingLinks;
 }
@@ -59,4 +59,15 @@ export interface TrainingsResponse {
 
 // Tipos auxiliares para ordenamiento
 export type SortableCustomerField = keyof Omit<Customer, 'id' | 'trainings' | '_links'>;
-export type SortableTrainingField = keyof Omit<Training, 'id' | 'customer' | '_links'>;
+export type SortableTrainingField = keyof Omit<Training, 'id' | 'customer' | '_links' | 'customerName'>;
+
+// Función helper para extraer ID de la URL
+export const extractIdFromUrl = (url: string): number | null => {
+  try {
+    const parts = url.split('/');
+    const id = parseInt(parts[parts.length - 1]);
+    return isNaN(id) ? null : id;
+  } catch {
+    return null;
+  }
+};
