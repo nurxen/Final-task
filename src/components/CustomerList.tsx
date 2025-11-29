@@ -64,10 +64,13 @@ const CustomerList: React.FC = () => {
     }
   };
 
-  const getSortIcon = (field: SortableCustomerField) => {
-    if (field !== sortField) return '↕️';
+  const getSortIcon = (field: SortableTrainingField) => {
+  if (field === sortField) {
     return sortDirection === 'asc' ? '↑' : '↓';
-  };
+  } else {
+    return '↑↓'; // flechas arriba y abajo sin icono azul
+  }
+};
 
   if (loading) {
     return <div className="loading">Loading customers...</div>;

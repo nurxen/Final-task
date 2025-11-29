@@ -112,9 +112,13 @@ const enrichedTrainings = await Promise.all(
   };
 
   const getSortIcon = (field: SortableTrainingField) => {
-    if (field !== sortField) return '↕️';
+  if (field === sortField) {
     return sortDirection === 'asc' ? '↑' : '↓';
-  };
+  } else {
+    return '↑↓'; // flechas arriba y abajo sin icono azul
+  }
+};
+
 
   const formatDate = (dateString: string) =>
     dayjs(dateString).format('DD.MM.YYYY HH:mm');
