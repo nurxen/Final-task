@@ -1,0 +1,173 @@
+import React, { useState, useEffect } from 'react';
+import type { Training, Customer, SortableTrainingField, TrainingsResponse, CustomersResponse } from '../types';
+import { trainingService, customerService } from '../services/api';
+import dayjs from 'dayjs';
+import './TrainingList.css';
+
+const TrainingList: React.FC = () => {
+  const [trainings, setTrainings] = useState<Training[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState<SortableTrainingField>('date');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+  try {
+    const [trainingsResponse, customersResponse] = await Promise.all([
+      trainingService.getAll(),
+      customerService.getAll()
+    ]);
+
+    const trainingsData = trainingsResponse.data._embedded.trainings;
+    const customersData = customersResponse.data._embedded.customers;
+
+    setCustomers(customersData);
+
+const enrichedTrainings = await Promise.all(
+  trainingsData.map(async training => {
+    let customerName = "Unknown Customer";
+
+    if (training._links?.customer?.href) {
+      const href = training._links.customer.href;
+
+      try {
+        const response = await fetch(href);
+        if (response.ok) {
+          const customer = await response.json();
+          customerName = `${customer.firstname} ${customer.lastname}`;
+        } else {
+          console.error("Failed to fetch customer data:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching customer data:", error);
+      }
+    }
+
+    return {
+      ...training,
+      customerName,
+    };
+  })
+);
+
+  
+
+
+
+
+    setTrainings(enrichedTrainings);
+  } catch (error) {
+    console.error("Error loading data:", error);
+    alert("Error loading trainings");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  // Filtrar entrenamientos
+  const filteredTrainings = trainings.filter(training =>
+    training.activity.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    training.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Función para ordenar
+  const compareValues = (a: Training, b: Training, field: SortableTrainingField): number => {
+    let aValue = a[field];
+    let bValue = b[field];
+
+    // Manejar fecha como timestamp
+    if (field === 'date') {
+      aValue = new Date(aValue as string).getTime();
+      bValue = new Date(bValue as string).getTime();
+    }
+
+    // Evitar problemas con undefined
+    if (aValue === undefined || aValue === null) aValue = '';
+    if (bValue === undefined || bValue === null) bValue = '';
+
+    if (aValue < bValue) return -1;
+    if (aValue > bValue) return 1;
+    return 0;
+  };
+
+  // Lista ordenada
+  const sortedTrainings = [...filteredTrainings].sort((a, b) => {
+    const comparison = compareValues(a, b, sortField);
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
+
+  const handleSort = (field: SortableTrainingField) => {
+    if (field === sortField) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field: SortableTrainingField) => {
+    if (field !== sortField) return '↕️';
+    return sortDirection === 'asc' ? '↑' : '↓';
+  };
+
+  const formatDate = (dateString: string) =>
+    dayjs(dateString).format('DD.MM.YYYY HH:mm');
+
+  if (loading) {
+    return <div className="loading">Loading trainings...</div>;
+  }
+
+  return (
+    <div className="training-list">
+      <h2>Trainings</h2>
+
+      {/* Search bar */}
+      <div className="search-bar">
+        <input
+          type="text"
+          placeholder="Search trainings by activity or customer..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="search-input"
+        />
+      </div>
+
+      {/* Table */}
+      <table className="trainings-table">
+        <thead>
+          <tr>
+            <th onClick={() => handleSort('date')}>Date {getSortIcon('date')}</th>
+            <th onClick={() => handleSort('activity')}>Activity {getSortIcon('activity')}</th>
+            <th onClick={() => handleSort('duration')}>Duration (min) {getSortIcon('duration')}</th>
+            <th onClick={() => handleSort('customerName')}>Customer {getSortIcon('customerName')}</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {sortedTrainings.length === 0 ? (
+            <tr>
+              <td colSpan={4} className="no-data">No trainings found</td>
+            </tr>
+          ) : (
+            sortedTrainings.map(training => (
+              <tr key={training.id}>
+                <td>{formatDate(training.date)}</td>
+                <td>{training.activity}</td>
+                <td>{training.duration}</td>
+                <td>{training.customerName}</td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default TrainingList;
