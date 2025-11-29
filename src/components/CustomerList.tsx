@@ -159,6 +159,55 @@ const CustomerList: React.FC = () => {
     }
   };
 
+  // Función para exportar a CSV
+  const handleExportCSV = () => {
+    // Filtrar solo los datos que queremos exportar (sin columnas de acciones)
+    const dataToExport = customers.map(customer => ({
+      firstname: customer.firstname,
+      lastname: customer.lastname,
+      email: customer.email,
+      phone: customer.phone,
+      streetaddress: customer.streetaddress,
+      postcode: customer.postcode,
+      city: customer.city
+    }));
+
+    // Crear cabeceras CSV
+    const headers = ['First Name', 'Last Name', 'Email', 'Phone', 'Street Address', 'Postcode', 'City'];
+    const csvHeaders = headers.join(',');
+
+    // Crear filas CSV
+    const csvRows = dataToExport.map(customer => 
+      [
+        `"${customer.firstname}"`,
+        `"${customer.lastname}"`,
+        `"${customer.email}"`,
+        `"${customer.phone}"`,
+        `"${customer.streetaddress}"`,
+        `"${customer.postcode}"`,
+        `"${customer.city}"`
+      ].join(',')
+    );
+
+    // Combinar cabeceras y filas
+    const csvContent = [csvHeaders, ...csvRows].join('\n');
+
+    // Crear y descargar archivo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `customers_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    alert('Customers exported to CSV successfully!');
+  };
+
   // Filtrar clientes basado en el término de búsqueda
   const filteredCustomers = customers.filter(customer =>
     customer.firstname.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -221,13 +270,19 @@ const CustomerList: React.FC = () => {
       
       {/* Toolbar */}
       <div className="toolbar">
-        <button className="btn btn-primary" onClick={handleAddCustomer}>
-          Add Customer
-        </button>
-        
-        <button className="btn btn-reset" onClick={handleResetDatabase}>
-          Reset Database
-        </button>
+        <div className="toolbar-left">
+          <button className="btn btn-primary" onClick={handleAddCustomer}>
+            Add Customer
+          </button>
+          
+          <button className="btn btn-export" onClick={handleExportCSV}>
+            Export to CSV
+          </button>
+          
+          <button className="btn btn-reset" onClick={handleResetDatabase}>
+            Reset Database
+          </button>
+        </div>
         
         {/* Barra de búsqueda */}
         <div className="search-bar">

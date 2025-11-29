@@ -26,6 +26,14 @@ const Navigation: React.FC = () => {
               Trainings
             </Link>
           </li>
+          <li>
+            <Link 
+              to="/calendar" 
+              className={location.pathname === '/calendar' ? 'active' : ''}
+            >
+              Calendar
+            </Link>
+          </li>
         </ul>
       </div>
     </nav>
